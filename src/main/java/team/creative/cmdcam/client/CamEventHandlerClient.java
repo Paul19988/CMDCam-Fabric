@@ -105,7 +105,7 @@ public class CamEventHandlerClient {
     public static double fovExactVanilla(float partialTickTime) {
         try {
             skipFov = true;
-            return ((CameraAccessor) MC.gameRenderer.getMainCamera()).callCalculateFov(partialTickTime);
+            return ((CameraAccessor) MC.gameRenderer.mainCamera()).callCalculateFov(partialTickTime);
         } finally {
             skipFov = false;
         }
@@ -121,7 +121,7 @@ public class CamEventHandlerClient {
 
     private CamEventHandlerClient() {
         ClientTickEvents.START_CLIENT_TICK.register(_ -> onClientTick());
-        LevelRenderEvents.START_MAIN.register(context -> onRenderTick(context.gameRenderer().getMinecraft().getDeltaTracker()));
+        LevelRenderEvents.START_MAIN.register(context -> onRenderTick(Minecraft.getInstance().getDeltaTracker()));
         LevelRenderEvents.END_MAIN.register(this::worldRender);
         UseEntityCallback.EVENT.register((player, level, hand, entity, hitResult) -> onPlayerInteract(player, entity, level));
         UseBlockCallback.EVENT.register((player, level, hand, hitResult) -> onPlayerInteract(player, level, hitResult.getBlockPos()));
@@ -241,7 +241,7 @@ public class CamEventHandlerClient {
     }
 
     public void worldRender(LevelRenderContext event) {
-        Vec3 view = MC.gameRenderer.getMainCamera().position();
+        Vec3 view = MC.gameRenderer.mainCamera().position();
 
         PoseStack pose = event.poseStack();
 
@@ -273,7 +273,7 @@ public class CamEventHandlerClient {
                 Gizmos.billboardText((i + 1) + "", new Vec3(point.x, point.y + 0.2, point.z), TextGizmo.Style.forColor(ColorUtils.WHITE));
             }
 
-            MC.renderBuffers().bufferSource().endLastBatch();
+            // Buffer flush no longer needed here with updated rendering pipeline
 
             try {
                 pose.pushPose();

@@ -6,12 +6,12 @@ import java.util.Map.Entry;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
+import net.minecraft.resources.Identifier;
 import team.creative.cmdcam.CMDCam;
 import team.creative.cmdcam.common.scene.CamScene;
 import team.creative.creativecore.common.util.registry.exception.RegistryException;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.saveddata.SavedData;
 
 public class CamSaveData extends SavedData {

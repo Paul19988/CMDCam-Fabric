@@ -8,14 +8,13 @@ import java.util.function.Predicate;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.advancements.predicates.MinMaxBounds;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import team.creative.cmdcam.client.EntitySelectorClient;
-
-import net.minecraft.advancements.criterion.MinMaxBounds;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityArgument;

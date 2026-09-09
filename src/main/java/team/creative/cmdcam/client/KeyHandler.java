@@ -1,10 +1,10 @@
 package team.creative.cmdcam.client;
 
+import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
 import team.creative.cmdcam.CMDCam;
 
 import net.minecraft.client.KeyMapping;
-import net.minecraft.resources.Identifier;
 
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 

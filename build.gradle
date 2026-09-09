@@ -57,7 +57,7 @@ dependencies {
     //implementation project(':CreativeCore')
 
     //minecraftLibrary fg.deobf("curse.maven:minema-resurrection-596719:4816846")
-    implementation "maven.modrinth:creativecore:2.14.16-fabric,26.1.2"
+    implementation "maven.modrinth:creativecore:2.14.16-fabric,26.2"
 }
 
 def resourceTargets = ['META-INF/mods.toml', 'pack.mcmeta', 'fabric.mod.json']

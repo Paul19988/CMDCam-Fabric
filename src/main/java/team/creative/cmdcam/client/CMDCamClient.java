@@ -1,11 +1,20 @@
 package team.creative.cmdcam.client;
 
-import java.util.HashMap;
-import java.util.List;
-
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
+import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import team.creative.cmdcam.CMDCam;
 import team.creative.cmdcam.client.mixin.GuiAccessor;
 import team.creative.cmdcam.common.command.argument.InterpolationArgument;
@@ -20,19 +29,8 @@ import team.creative.cmdcam.common.scene.CamScene;
 import team.creative.creativecore.client.CreativeCoreClient;
 import team.creative.creativecore.common.util.mc.TickUtils;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
-
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
-import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
+import java.util.HashMap;
+import java.util.List;
 
 public class CMDCamClient implements ClientModInitializer {
     
@@ -79,7 +77,7 @@ public class CMDCamClient implements ClientModInitializer {
     private static void layers() {
         HudElementRegistry.attachElementAfter(VanillaHudElements.TITLE_AND_SUBTITLE, Identifier.fromNamespaceAndPath(CMDCam.MODID, "title"), (graphics, tracker) -> {
             if (CMDCamClient.isPlaying())
-                ((GuiAccessor) Minecraft.getInstance().gui).callExtractTitle(graphics, tracker);
+                ((GuiAccessor) Minecraft.getInstance().gui.hud).callExtractTitle(graphics, tracker);
         });
     }
     
@@ -219,7 +217,9 @@ public class CMDCamClient implements ClientModInitializer {
     public static void pause() {
         if (playing != null)
             playing.pause();
-        Minecraft.getInstance().options.hideGui = hideGuiCache;
+        var hud = Minecraft.getInstance().gui.hud;
+        if (hud.isHidden() != hideGuiCache)
+            hud.toggle();
     }
     
     public static void resume() {
@@ -234,7 +234,9 @@ public class CMDCamClient implements ClientModInitializer {
             return;
         playing.finish(Minecraft.getInstance().level);
         playing = null;
-        Minecraft.getInstance().options.hideGui = hideGuiCache;
+        var hud = Minecraft.getInstance().gui.hud;
+        if (hud.isHidden() != hideGuiCache)
+            hud.toggle();
     }
     
     public static void stopServer() {
@@ -242,11 +244,13 @@ public class CMDCamClient implements ClientModInitializer {
             return;
         playing.finish(Minecraft.getInstance().level);
         playing = null;
-        Minecraft.getInstance().options.hideGui = hideGuiCache;
+        var hud = Minecraft.getInstance().gui.hud;
+        if (hud.isHidden() != hideGuiCache)
+            hud.toggle();
     }
     
     public static void noTickPath(Level level, float renderTickTime) {
-        hideGuiCache = Minecraft.getInstance().options.hideGui;
+        hideGuiCache = Minecraft.getInstance().gui.hud.isHidden();
     }
     
     public static void gameTickPath(Level level) {
@@ -256,7 +260,9 @@ public class CMDCamClient implements ClientModInitializer {
     public static void renderTickPath(Level level, float renderTickTime) {
         playing.renderTick(level, renderTickTime);
         if (!playing.playing()) {
-            Minecraft.getInstance().options.hideGui = hideGuiCache;
+            var hud = Minecraft.getInstance().gui.hud;
+            if (hud.isHidden() != hideGuiCache)
+                hud.toggle();
             playing = null;
         }
     }

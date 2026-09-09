@@ -1,37 +1,11 @@
 package team.creative.cmdcam;
 
-import java.util.Collection;
-import java.util.function.Supplier;
-
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import team.creative.cmdcam.common.command.argument.CamModeArgument;
-import team.creative.cmdcam.common.command.argument.CamPitchModeArgument;
-import team.creative.cmdcam.common.command.argument.DurationArgument;
-import team.creative.cmdcam.common.command.argument.InterpolationArgument;
-import team.creative.cmdcam.common.command.argument.InterpolationArgument.AllInterpolationArgument;
-import team.creative.cmdcam.common.command.builder.SceneCommandBuilder;
-import team.creative.cmdcam.common.command.builder.SceneStartCommandBuilder;
-import team.creative.cmdcam.common.packet.ConnectPacket;
-import team.creative.cmdcam.common.packet.GetPathPacket;
-import team.creative.cmdcam.common.packet.PausePathPacket;
-import team.creative.cmdcam.common.packet.ResumePathPacket;
-import team.creative.cmdcam.common.packet.SetPathPacket;
-import team.creative.cmdcam.common.packet.StartPathPacket;
-import team.creative.cmdcam.common.packet.StopPathPacket;
-import team.creative.cmdcam.common.packet.TeleportPathPacket;
-import team.creative.cmdcam.common.scene.CamScene;
-import team.creative.cmdcam.server.CMDCamServer;
-import team.creative.cmdcam.server.CamEventHandler;
-import team.creative.creativecore.common.config.holder.CreativeConfigRegistry;
-import team.creative.creativecore.common.network.CreativeNetwork;
-import team.creative.creativecore.common.network.CreativePacket;
-import team.creative.creativecore.mixin.ArgumentTypeInfosAccessor;
-
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -44,10 +18,26 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import team.creative.cmdcam.common.command.argument.CamModeArgument;
+import team.creative.cmdcam.common.command.argument.CamPitchModeArgument;
+import team.creative.cmdcam.common.command.argument.DurationArgument;
+import team.creative.cmdcam.common.command.argument.InterpolationArgument;
+import team.creative.cmdcam.common.command.argument.InterpolationArgument.AllInterpolationArgument;
+import team.creative.cmdcam.common.command.builder.SceneCommandBuilder;
+import team.creative.cmdcam.common.command.builder.SceneStartCommandBuilder;
+import team.creative.cmdcam.common.packet.*;
+import team.creative.cmdcam.common.scene.CamScene;
+import team.creative.cmdcam.server.CMDCamServer;
+import team.creative.cmdcam.server.CamEventHandler;
+import team.creative.creativecore.common.config.holder.CreativeConfigRegistry;
+import team.creative.creativecore.common.network.CreativeNetwork;
+import team.creative.creativecore.common.network.CreativePacket;
+import team.creative.creativecore.mixin.ArgumentTypeInfosAccessor;
 
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import java.util.Collection;
+import java.util.function.Supplier;
 
 public class CMDCam implements ModInitializer {
 
@@ -59,11 +49,12 @@ public class CMDCam implements ModInitializer {
     public static final DeferredRegister<ArgumentTypeInfo<?, ?>> COMMAND_ARGUMENT_TYPES = DeferredRegister.create(Registries.COMMAND_ARGUMENT_TYPE, MODID);
 
     public record DeferredRegister<T>(
-        String modId,
-        Registry<T> registry
+            String modId,
+            Registry<T> registry
     ) {
 
         public static <T> DeferredRegister<T> create(ResourceKey<? extends Registry<T>> registryKey, String modId) {
+            // 1.21.2+: use getValueOrThrow to obtain the registry instance directly
             var registry = (Registry<T>) BuiltInRegistries.REGISTRY.getValueOrThrow((ResourceKey) registryKey);
             return new DeferredRegister<>(modId, registry);
         }
@@ -72,7 +63,8 @@ public class CMDCam implements ModInitializer {
             Registry.register(this.registry(), Identifier.fromNamespaceAndPath(this.modId(), name), builder.get());
         }
 
-        public void register() {}
+        public void register() {
+        }
     }
 
     @Override
@@ -81,15 +73,15 @@ public class CMDCam implements ModInitializer {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> commands(dispatcher));
 
         COMMAND_ARGUMENT_TYPES.register("duration", () -> registerByClass(DurationArgument.class, SingletonArgumentInfo.<DurationArgument>contextFree(
-            () -> DurationArgument.duration())));
+                () -> DurationArgument.duration())));
         COMMAND_ARGUMENT_TYPES.register("cam_mode", () -> registerByClass(CamModeArgument.class, SingletonArgumentInfo.<CamModeArgument>contextFree(
-            () -> CamModeArgument.mode())));
+                () -> CamModeArgument.mode())));
         COMMAND_ARGUMENT_TYPES.register("interpolation", () -> registerByClass(InterpolationArgument.class, SingletonArgumentInfo
-            .<InterpolationArgument>contextFree(() -> InterpolationArgument.interpolation())));
+                .<InterpolationArgument>contextFree(() -> InterpolationArgument.interpolation())));
         COMMAND_ARGUMENT_TYPES.register("all_interpolation", () -> registerByClass(AllInterpolationArgument.class, SingletonArgumentInfo
-            .<AllInterpolationArgument>contextFree(() -> InterpolationArgument.interpolationAll())));
+                .<AllInterpolationArgument>contextFree(() -> InterpolationArgument.interpolationAll())));
         COMMAND_ARGUMENT_TYPES.register("pitch_mode", () -> registerByClass(CamPitchModeArgument.class, SingletonArgumentInfo.<CamPitchModeArgument>contextFree(
-            () -> CamPitchModeArgument.pitchMode())));
+                () -> CamPitchModeArgument.pitchMode())));
         COMMAND_ARGUMENT_TYPES.register();
     }
 
@@ -109,7 +101,9 @@ public class CMDCam implements ModInitializer {
         NETWORK.registerType(ResumePathPacket.class, ResumePathPacket::new);
 
         var handler = new CamEventHandler();
-        ServerPlayerEvents.JOIN.register(handler::onPlayerConnect);
+        net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.JOIN.register((serverPlayNetworkHandler, packetSender, minecraftServer) -> {
+            handler.onPlayerConnect(serverPlayNetworkHandler.player);
+        });
 
         CreativeConfigRegistry.ROOT.registerValue(MODID, CONFIG);
     }
